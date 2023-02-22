@@ -14,8 +14,8 @@ library(shinythemes)
 #==================== Data Merging and Subseting ========================
 
 #load the original data sets
-License_Applications <- read.csv("License_Applications.csv")
-Legally_Operating_Businesses <- read.csv("Legally_Operating_Businesses.csv")
+#License_Applications <- read.csv("License_Applications.csv")
+#Legally_Operating_Businesses <- read.csv("Legally_Operating_Businesses.csv")
 
 #get the latest data
 #License_Applications <- read.csv("https://data.cityofnewyork.us/api/views/ptev-4hud/rows.csv?accessType=DOWNLOAD")
@@ -26,7 +26,7 @@ Legally_Operating_Businesses <- read.csv("Legally_Operating_Businesses.csv")
 #merge two datasets and subset useful rows&columns
 Legal <- Legally_Operating_Businesses[,c('DCA.License.Number','Address.Borough')]
 
-License_merged <- left_join(License_Applications, Legal,by=c('License.Number' = 'DCA.License.Number'))
+License_merged <- left_join(License_Applications, Legal,by=c('License.Number' = 'DCA.License.Number'),multiple="all")
 NY <- c('ny', 'NY', 'New York')
 License_merged_Ny <- filter(License_merged, `State` %in% NY)
 
@@ -53,7 +53,7 @@ License_merged_clean$Address.Borough <- toupper(License_merged_clean$Address.Bor
 
 
 #load the cleaned data
-#License_merged_clean <- read.csv("License_merged_clean.csv")
+License_merged_clean <- read.csv("../data/License_merged_clean.csv")
 head(License_merged_clean)
 unique(License_merged_clean$License.Type)
 
@@ -82,8 +82,6 @@ License_merged_clean$New.Category <- ifelse(License_merged_clean$License.Categor
 #License_merged_clean$New.Category <- ifelse(License_merged_clean$License.Category %in% Service_1,"Service (Individual)",License_merged_clean$New.Category)
 #License_merged_clean$New.Category <- ifelse(License_merged_clean$License.Category %in% Skilled_Wokers,"Skilled_Wokers",License_merged_clean$New.Category)
 
-head(License_merged_clean)
-unique(License_merged_clean$New.Category)
 
 
 #individual
@@ -100,18 +98,19 @@ ui <- dashboardPage(
 #=========================Dashboard Title================================
 
   dashboardHeader(title = "NYC Business License Application",
-                  titleWidth = 300),
+                  titleWidth = 400),
 
 #==========================SideBar Tabs==================================
 
   dashboardSidebar(
     sidebarMenu(
+      menuItem("Introduction", tabName = "Intro", icon = icon("paperclip")),
       menuItem("Map", tabName = "Map", icon = icon("map")),
       menuItem("Service (Business)", tabName = "Service-Business", icon = icon("dashboard")),
       menuItem("Entertainment", icon = icon("heart"), tabName = "Entertainment"),
       menuItem("Retail", icon = icon("circle-info"), tabName = "Retail"),
       menuItem("Transportation", icon = icon("car"), tabName = "Transportation"),
-      menuItem("Appendix", icon = icon("info"), tabName = "Appendix")
+      menuItem("Appendix", icon = icon("receipt"), tabName = "Appendix")
     )
   ),
 
@@ -122,6 +121,28 @@ ui <- dashboardPage(
     theme = shinythemes::shinytheme('cerulean'),
     
     tabItems(
+      #--------------------
+      tabItem(
+        tabName = "Intro",
+        tags$img(
+          src = "https://smallbiztrends.com/ezoimgfmt/media.smallbiztrends.com/2019/07/Organizing-File-Cabinet-850x476.jpg?ezimgfmt=ng%3Awebp%2Fngcb12%2Frs%3Adevice%2Frscb12-1",
+          width = "100%",
+          style = "opacity: 0.80"
+        ),
+        fluidRow(
+          absolutePanel(
+            style = "background-color: white",
+            top = "35%",
+            left = "30%",
+            right = "25%",
+            height = 170,
+            tags$p(
+              style = "padding: 5%; background-color: white; font-family: alegreya; font-size: 120%",
+              "This R Shiny application visualizes the number of sent applications and how successful they were over time since 2014, separated by borough. To see how different sectors were affected, businesses are separated into 4 categories: Services and Business, Entertainment, Retail, and Transportation. This app highlights the specific socioeconomic impacts COVID-19 had from the perspective of business owners and its patrons. All data is drawn from NYC Open Data."
+            )
+          )
+        )
+      ),
       #---------------------- Map Tab -----------------------------------
       tabItem(
         tabName = "Map",
@@ -130,7 +151,7 @@ ui <- dashboardPage(
           box(
             width=12,
             title = "Map",
-            selectInput("Map_district","Map District:", choices = c('try','trytry'))
+            selectInput("Map_district","Map District:", choices = c('Bronx','Brooklyn','Queens','Manhattan','State Island'))
           ),
           box(
             width=6,
@@ -379,14 +400,14 @@ ui <- dashboardPage(
       tags$a(
         href = "https://github.com/TZstatsADS/ads-spring2023-project2-group5",
         "github.com/TZstatsADS/ads-spring2023-project2-group5"
-      ),
-      fluidRow(
-        box(
-          width=12,
-          title = "Appendix",
-          textOutput("text")
-        )
       )
+#      fluidRow(
+#        box(
+#          width=12,
+#          title = "Appendix",
+#          textOutput("text")
+#        )
+#      )
     )
     
   )
@@ -406,13 +427,13 @@ server <- function(input, output) {
   #==============================Map plot ==================================
   output$Map_1 <- renderImage({
     #'D:/source/Stats 5243/',
-    list(src = paste(input$Map_district,'.jpg',sep=""),width='100%')
+    list(src = paste('../doc/figs/',input$Map_district,'_Before.png',sep=""),width='100%')
     
   },deleteFile=FALSE)
   
   output$Map_2 <- renderImage({
     #'D:/source/Stats 5243/',
-    list(src = paste(input$Map_district,'.jpg',sep=""),width='100%')
+    list(src = paste('../doc/figs/',input$Map_district,'_After.png',sep=""),width='100%')
     
   },deleteFile=FALSE)
   
@@ -537,9 +558,9 @@ server <- function(input, output) {
   
   #=============================== Appendix Text ==========================
   
-  output$text <- renderText({
-    paste("hello hello hellokwfiweafebfdfv rnfvdsjfsjakhewhgdsjkfnjsdkfdshfkj")
-  })
+#  output$text <- renderText({
+#    paste("hello hello hellokwfiweafebfdfv rnfvdsjfsjakhewhgdsjkfnjsdkfdshfkj")
+#  })
   
   
 }

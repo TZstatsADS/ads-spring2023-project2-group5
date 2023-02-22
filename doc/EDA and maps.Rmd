@@ -12,23 +12,13 @@ output:
 if (!require("DT")) install.packages('DT')
 if (!require("dtplyr")) install.packages('dtplyr')
 if (!require("lubridate")) install.packages('lubridate')
-if (!require("ggmap")) install.packages('ggmap')
-if (!require("choroplethrZip")) {
-  #install.packages("devtools")
-  library(devtools)
-  install_github('arilamstein/choroplethrZip@v1.5.0')}
-if (!require("choroplethr")) install.packages("choroplethr")
 if (!require("devtools")) install.packages("devtools")
-if (!require("choroplethrZip")) 
-  devtools::install_github('arilamstein/choroplethrZip@v1.5.0')
 if (!require("ggplot2")) devtools::install_github("hadley/ggplot2")
-if (!require("ggmap")) devtools::install_github("dkahle/ggmap")
 if (!require("shiny")) install.packages("shiny")
+if (!require("viridis")) install.packages("viridis")
 ```
 
-
 ```{r} 
-library(leaflet)
 library(ggplot2)
 library(reshape2)
 library(dtplyr)
@@ -37,10 +27,7 @@ library(DT)
 library(lubridate)
 library(devtools)
 library(shiny)
-library(choroplethrZip)
-library(caret)
-library(tmap)
-library(tmaptools)
+library(viridis)
 ```
 
 
@@ -48,7 +35,7 @@ library(tmaptools)
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 
 # Covid Count Dataset
-covid_cases = read.csv('covid_cases.csv')
+covid_cases = read.csv('../Data/covid_cases.csv')
 
 # set the first column of timestamps as row name
 rownames(covid_cases) = covid_cases$date_of_interest
@@ -86,6 +73,13 @@ hospitalized_count = rbind(colSums(hospitalized_count), hospitalized_count)
 datatable(sample_n(hospitalized_count, 5))
 ```
 
+```{r}
+# downloading zipcode data from NYC Open Data
+nyc_zipcode_geo <- sf::st_read("../Data/ZIP_CODE_040114/ZIP_CODE_040114.shp") %>%
+  sf::st_transform('+proj=longlat +datum=WGS84')
+nyc_zipcode_geo$ZIPCODE <- type.convert(nyc_zipcode_geo$ZIPCODE)
+```
+
 
 ```{r} 
 # assigning the zip of the boroughs to variables
@@ -97,11 +91,10 @@ all_si_zip = c(10301:10314)
 all_nyc_zip = c(all_bx_zip, all_bk_zip, all_mn_zip, all_qn_zip, all_si_zip)
 ```
 
-
 ```{r} 
 # License_Application and Legally_Operating_business Data Cleaning
-License_Applications = read.csv("License_Applications.csv")
-Legally_Operating_Businesses <- read.csv("Legally_Operating_Businesses.csv")
+License_Applications = read.csv("../Data/License_Applications.csv")
+Legally_Operating_Businesses <- read.csv("../Data/Legally_Operating_Businesses.csv")
 
 Legal <- Legally_Operating_Businesses[,c('DCA.License.Number','Borough.Code')] 
 
@@ -120,8 +113,6 @@ License_merged_Ny <- mutate(License_merged_Ny, Processing_time = as.numeric(diff
 License_merged_Ny_sub <- License_merged_Ny[,c('License.Number','License.Type','License.Category','Start.Date',
                                               'End.Date','Start_Month','Start_Year','Processing_time','Longitude','Latitude','Status', 'Borough.Code', 'Zip', 'City')]
 License_merged_clean <- na.omit(License_merged_Ny_sub)
-
-#write.csv(License_merged_clean, file = "data_clean.csv", row.names = FALSE)
 
 #business and individual
 business_data <-  filter(License_merged_clean, `License.Type` == 'Business')
@@ -162,8 +153,6 @@ Individualdata_Skilled_Wokers <- filter(individual_data, `License.Category` %in%
 
 ```
 
-
-
 ```{r} 
 # Seperate the License_merged_clean before and after 2.29.2020
 # 804 days since covid
@@ -176,7 +165,6 @@ License_before = License_merged_clean[as.Date("2017-11-6") <= License_merged_cle
 # After the cutoff date
 License_after = License_merged_clean[License_merged_clean$Start.Date >= cutoff_date,]
 
-
 cat("number of rows in License_merged_clean:", nrow(License_merged_clean), "\n")
 cat("number of rows in License_before:", nrow(License_before), "\n")
 cat("number of rows in License_after:", nrow(License_after), "\n")
@@ -184,8 +172,7 @@ cat("number of rows in License_after:", nrow(License_after), "\n")
 
 
 ```{r} 
-
-# Before COVID
+# Filtered License Data Before COVID
 license_bronx_before = filter(License_before, `Zip` %in% all_bx_zip)
 license_brooklyn_before = filter(License_before, `Zip` %in% all_bk_zip)
 license_manhattan_before = filter(License_before, `Zip` %in% all_mn_zip)
@@ -193,10 +180,8 @@ license_queens_before = filter(License_before, `Zip` %in% all_qn_zip)
 license_staten_island_before = filter(License_before, `Zip` %in% all_si_zip)
 ```
 
-
 ```{r} 
-
-# After COVID
+# Filtered License Data After COVID
 license_bronx_after = filter(License_after, `Zip` %in% all_bx_zip)
 license_brooklyn_after = filter(License_after, `Zip` %in% all_bk_zip)
 license_manhattan_after = filter(License_after, `Zip` %in% all_mn_zip)
@@ -204,226 +189,230 @@ license_queens_after = filter(License_after, `Zip` %in% all_qn_zip)
 license_staten_island_after = filter(License_after, `Zip` %in% all_si_zip)
 ```
 
+```{r}
+# Separating zipcode geoData by boroughs
+bronx_geo <- nyc_zipcode_geo[nyc_zipcode_geo$COUNTY=='Bronx'&nyc_zipcode_geo$ZIPCODE %in% all_bx_zip,]
+manhattan_geo <- nyc_zipcode_geo[nyc_zipcode_geo$COUNTY=='New York'&nyc_zipcode_geo$ZIPCODE %in% all_mn_zip,,]
+queens_geo <- nyc_zipcode_geo[nyc_zipcode_geo$COUNTY=='Queens'&nyc_zipcode_geo$ZIPCODE %in% all_qn_zip,,]
+brooklyn_geo <- nyc_zipcode_geo[nyc_zipcode_geo$COUNTY=='Kings'&nyc_zipcode_geo$ZIPCODE %in% all_bk_zip,,]
+si_geo <- nyc_zipcode_geo[nyc_zipcode_geo$COUNTY=='Richmond'&nyc_zipcode_geo$ZIPCODE %in% all_si_zip,,]
+```
 
 ```{r} 
-# Bronx Map Before COVID
-# Convert the table to a data frame
 bronx_count_before = data.frame(count = table(license_bronx_before$Zip))
 colnames(bronx_count_before) = c('zip', 'counts')
+bronx_count_before <- data.frame(lapply(bronx_count_before,strtoi))
 
-# Convert zip code to character string
-bronx_count_before$zip = as.character(bronx_count_before$zip)
+# Join app license data to zipcode geoData
+bronx_before = bronx_geo %>%
+  left_join(bronx_count_before, by = c("ZIPCODE"="zip")) 
 
-# Rename columns to "region" and "value"
-user.df = data.frame(region = bronx_count_before$zip, value = bronx_count_before$counts)
-
-# Create the choropleth map
-zip_choropleth(user.df, 
-               title = "Number of Business Applications before COVID in Bronx", 
-               legend = "counts",
-               county_zoom = 36005)
+# Bronx Map Before COVID
+ggplot(data = bronx_before) +
+  geom_sf(aes(fill = counts))+
+  scale_fill_viridis(breaks=c(125,250,375,500), name="Sent Applications",option = "A")+
+  labs(
+    title = "Business Applications Before COVID-19 in Bronx",
+  ) +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank())
 ```
 
-
 ```{r} 
-
-# Bronx Map after COVID
-# Convert the table to a data frame
 bronx_count_after = data.frame(count = table(license_bronx_after$Zip))
 colnames(bronx_count_after) = c('zip', 'counts')
+bronx_count_after <- data.frame(lapply(bronx_count_after,strtoi))
 
-# Convert zip code to character string
-bronx_count_after$zip = as.character(bronx_count_after$zip)
+# Join app license data to zipcode geoData
+bronx_after = bronx_geo %>%
+  left_join(bronx_count_after, by = c("ZIPCODE"="zip")) 
 
-# Rename columns to "region" and "value"
-user.df = data.frame(region = bronx_count_after$zip, value = bronx_count_after$counts)
-
-# Create the choropleth map
-zip_choropleth(user.df, 
-               title = "Number of Business Applications after COVID in Bronx", 
-               legend = "counts",
-               county_zoom = 36005)
+# Bronx Map After COVID
+ggplot(data = bronx_after) +
+  geom_sf(aes(fill = counts))+
+  scale_fill_viridis(breaks=c(125,250,375,500), name="Sent Applications",option = "A")+
+  labs(
+    title = "Business Applications After COVID-19 in Bronx",
+  ) +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank())
 ```
 
-
 ```{r} 
-
-# Brooklyn Map Before COVID
-# Convert the table to a data frame
-brooklyn_count_before = data.frame(count = table(license_brooklyn_before$Zip))
-colnames(brooklyn_count_before) = c('zip', 'counts')
-
-# Convert zip code to character string
-brooklyn_count_before$zip <- as.character(brooklyn_count_before$zip)
-
-# Rename columns to "region" and "value"
-user.df = data.frame(region = brooklyn_count_before$zip, value = brooklyn_count_before$counts)
-
-
-# Create the choropleth map
-zip_choropleth(user.df, 
-               title = "Number of Business Applications before COVID in Brooklyn", 
-               legend = "counts",
-               county_zoom = 36047)
-```
-
-
-```{r} 
-
-# Brooklyn Map after COVID
-# Convert the table to a data frame
-brooklyn_count_after = data.frame(count = table(license_brooklyn_after$Zip))
-colnames(brooklyn_count_after) = c('zip', 'counts')
-
-# Convert zip code to character string
-brooklyn_count_after$zip = as.character(brooklyn_count_after$zip)
-
-# Rename columns to "region" and "value"
-user.df = data.frame(region = brooklyn_count_after$zip, value = brooklyn_count_after$counts)
-
-
-# Create the choropleth map
-zip_choropleth(user.df, 
-               title = "Number of Business Applications after COVID in Brooklyn", 
-               legend = "counts",
-               county_zoom = 36047)
-```
-
-
-```{r} 
-
-# Queens Map before COVID
-# Convert the table to a data frame
-queens_count_before = data.frame(count = table(license_queens_before$Zip))
-colnames(queens_count_before) = c('zip', 'counts')
-
-# Convert zip code to character string
-queens_count_before$zip = as.character(queens_count_before$zip)
-
-# Rename columns to "region" and "value"
-user.df = data.frame(region = queens_count_before$zip, value = queens_count_before$counts)
-
-# Create the choropleth map
-zip_choropleth(user.df, 
-               title = "Number of Business Applications before COVID in Queens", 
-               legend = "counts",
-               county_zoom = 36081)
-```
-
-
-```{r} 
-
-# Queens Map after COVID
-# Convert the table to a data frame
-queens_count_after = data.frame(count = table(license_queens_after$Zip))
-colnames(queens_count_after) = c('zip', 'counts')
-
-# Convert zip code to character string
-queens_count_after$zip = as.character(queens_count_after$zip)
-
-# Rename columns to "region" and "value"
-user.df = data.frame(region = queens_count_after$zip, value = queens_count_after$counts)
-
-# Create the choropleth map
-zip_choropleth(user.df, 
-               title = "Number of Business Applications after COVID in Queens", 
-               legend = "counts",
-               county_zoom = 36081)
-```
-
-
-```{r} 
-
-# Manhattan Map before COVID
-# Convert the table to a data frame
 manhattan_count_before = data.frame(count = table(license_manhattan_before$Zip))
 colnames(manhattan_count_before) = c('zip', 'counts')
+manhattan_count_before <- data.frame(lapply(manhattan_count_before,strtoi))
 
-# Convert zip code to character string
-manhattan_count_before$zip = as.character(manhattan_count_before$zip)
+# Join app license data to zipcode geoData
+manhattan_before = manhattan_geo %>%
+  left_join(manhattan_count_before, by = c("ZIPCODE"="zip")) 
 
-# Rename columns to "region" and "value"
-user.df = data.frame(region = manhattan_count_before$zip, value = manhattan_count_before$counts)
-
-# Create the choropleth map
-zip_choropleth(user.df, 
-               title = "Number of Business Applications before COVID in Manhattan", 
-               legend = "counts",
-               county_zoom = 36061)
+# Manhattan Map Before COVID
+ggplot(data = manhattan_before) +
+  geom_sf(aes(fill = counts))+
+  scale_fill_viridis(breaks=c(100,200,300,400,500, 600, 700), name="Sent Applications",option = "A")+
+  labs(
+    title = "Business Applications Before COVID-19 in Manhattan",
+  ) +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank())
 ```
-
-
 ```{r} 
-
-# Manhattan Map after COVID
-# Convert the table to a data frame
 manhattan_count_after = data.frame(count = table(license_manhattan_after$Zip))
 colnames(manhattan_count_after) = c('zip', 'counts')
+manhattan_count_after <- data.frame(lapply(manhattan_count_after,strtoi))
 
-# Convert zip code to character string
-manhattan_count_after$zip = as.character(manhattan_count_after$zip)
+# Join app license data to zipcode geoData
+manhattan_after = manhattan_geo %>%
+  left_join(manhattan_count_after, by = c("ZIPCODE"="zip")) 
 
-# Rename columns to "region" and "value"
-user.df = data.frame(region = manhattan_count_after$zip, value = manhattan_count_after$counts)
-
-# Create the choropleth map
-zip_choropleth(user.df, 
-               title = "Number of Business Applications after COVID in Manhattan", 
-               legend = "counts",
-               county_zoom = 36061)
+# Manhattan Map After COVID
+ggplot(data = manhattan_after) +
+  geom_sf(aes(fill = counts))+
+  scale_fill_viridis(breaks=c(100,200,300,400,500, 600, 700), name="Sent Applications",option = "A")+
+  labs(
+    title = "Business Applications After COVID-19 in Manhattan",
+  ) +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank())
 ```
-
 
 ```{r} 
+queens_count_before = data.frame(count = table(license_queens_before$Zip))
+colnames(queens_count_before) = c('zip', 'counts')
+queens_count_before <- data.frame(lapply(queens_count_before,strtoi))
 
-# Staten Island Map before COVID
-# Convert the table to a data frame
-statenisland_count_before = data.frame(count = table(license_staten_island_before$Zip))
-colnames(statenisland_count_before) = c('zip', 'counts')
+# Join app license data to zipcode geoData
+queens_before = queens_geo %>%
+  left_join(queens_count_before, by = c("ZIPCODE"="zip")) 
 
-# Convert zip code to character string
-statenisland_count_before$zip = as.character(statenisland_count_before$zip)
-
-# Rename columns to "region" and "value"
-user.df = data.frame(region = statenisland_count_before$zip, value = statenisland_count_before$counts)
-
-# Create the choropleth map
-zip_choropleth(user.df, 
-               title = "Number of Business Applications before COVID in Staten Island", 
-               legend = "counts",
-               county_zoom = 36085)
+# Queens Map Before COVID
+ggplot(data = queens_before) +
+  geom_sf(aes(fill = counts))+
+  scale_fill_viridis(breaks=c(100,200,300,400,500, 600, 700), name="Sent Applications",option = "A")+
+  labs(
+    title = "Business Applications Before COVID-19 in Queens",
+  ) +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank())
 ```
+```{r} 
+queens_count_after = data.frame(count = table(license_queens_after$Zip))
+colnames(queens_count_after) = c('zip', 'counts')
+queens_count_after <- data.frame(lapply(queens_count_after,strtoi))
 
+# Join app license data to zipcode geoData
+queens_after = queens_geo %>%
+  left_join(queens_count_after, by = c("ZIPCODE"="zip")) 
+
+# Queens Map After COVID
+ggplot(data = queens_after) +
+  geom_sf(aes(fill = counts))+
+  scale_fill_viridis(breaks=c(100,200,300,400,500, 600, 700), name="Sent Applications",option = "A")+
+  labs(
+    title = "Business Applications After COVID-19 in Queens",
+  ) +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank())
+```
+```{r} 
+brooklyn_count_before = data.frame(count = table(license_brooklyn_before$Zip))
+colnames(brooklyn_count_before) = c('zip', 'counts')
+brooklyn_count_before <- data.frame(lapply(brooklyn_count_before,strtoi))
+
+# Join app license data to zipcode geoData
+brooklyn_before = brooklyn_geo %>%
+  left_join(brooklyn_count_before, by = c("ZIPCODE"="zip")) 
+
+# Brooklyn Map Before COVID
+ggplot(data = brooklyn_before) +
+  geom_sf(aes(fill = counts))+
+  scale_fill_viridis(breaks=c(100,200,300,400, 500,600,700,800), name="Sent Applications",option = "A")+
+  labs(
+    title = "Business Applications Before COVID-19 in Brooklyn",
+  ) +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank())
+```
 
 ```{r} 
+brooklyn_count_after = data.frame(count = table(license_brooklyn_after$Zip))
+colnames(brooklyn_count_after) = c('zip', 'counts')
+brooklyn_count_after <- data.frame(lapply(brooklyn_count_after,strtoi))
 
-# Staten Island Map after COVID
-# Convert the table to a data frame
-statenisland_count_after = data.frame(count = table(license_staten_island_after$Zip))
-colnames(statenisland_count_after) = c('zip', 'counts')
+# Join app license data to zipcode geoData
+brooklyn_after = brooklyn_geo %>%
+  left_join(brooklyn_count_after, by = c("ZIPCODE"="zip")) 
 
-# Convert zip code to character string
-statenisland_count_after$zip = as.character(statenisland_count_after$zip)
-
-# Rename columns to "region" and "value"
-user.df = data.frame(region = statenisland_count_after$zip, value = statenisland_count_after$counts)
-
-# Create the choropleth map
-zip_choropleth(user.df, 
-               title = "Number of Business Applications after COVID in Staten Island", 
-               legend = 5,
-               county_zoom = 36085)
+# Brooklyn Map After COVID
+ggplot(data = brooklyn_after) +
+  geom_sf(aes(fill = counts))+
+  scale_fill_viridis(breaks=c(100,200,300,400, 500,600,700,800), name="Sent Applications",option = "A")+
+  labs(
+    title = "Business Applications After COVID-19 in Brooklyn",
+  ) +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank())
 ```
 
+```{r} 
+staten_island_count_before = data.frame(count = table(license_staten_island_before$Zip))
+colnames(staten_island_count_before) = c('zip', 'counts')
+staten_island_count_before <- data.frame(lapply(staten_island_count_before,strtoi))
 
+# Join app license data to zipcode geoData
+si_before = si_geo %>%
+  left_join(staten_island_count_before, by = c("ZIPCODE"="zip")) 
 
+# Staten Island Map Before COVID
+ggplot(data = si_before) +
+  geom_sf(aes(fill = counts))+
+  scale_fill_viridis(breaks=c(100,200,300,400, 500,600), name="Sent Applications",option = "A")+
+  labs(
+    title = "Business Applications Before COVID-19 in Staten Island",
+  ) +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank())
+```
+```{r} 
+staten_island_count_after = data.frame(count = table(license_staten_island_after$Zip))
+colnames(staten_island_count_after) = c('zip', 'counts')
+staten_island_count_after <- data.frame(lapply(staten_island_count_after,strtoi))
 
+# Join app license data to zipcode geoData
+si_after = si_geo %>%
+  left_join(staten_island_count_after, by = c("ZIPCODE"="zip")) 
 
-
-
-
-
-
+# Staten Island Map After COVID
+ggplot(data = si_after) +
+  geom_sf(aes(fill = counts))+
+  scale_fill_viridis(breaks=c(100,200,300,400, 500,600), name="Sent Applications",option = "A")+
+  labs(
+    title = "Business Applications After COVID-19 in Staten Island",
+  ) +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank())
+```
 
 
 

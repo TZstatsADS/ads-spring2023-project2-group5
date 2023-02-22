@@ -24,28 +24,28 @@ library(shinythemes)
 #colnames(Legally_Operating_Businesses)
 
 #merge two datasets and subset useful rows&columns
-Legal <- Legally_Operating_Businesses[,c('DCA.License.Number','Address.Borough')]
+#Legal <- Legally_Operating_Businesses[,c('DCA.License.Number','Address.Borough')]
 
-License_merged <- left_join(License_Applications, Legal,by=c('License.Number' = 'DCA.License.Number'),multiple="all")
-NY <- c('ny', 'NY', 'New York')
-License_merged_Ny <- filter(License_merged, `State` %in% NY)
+#License_merged <- left_join(License_Applications, Legal,by=c('License.Number' = 'DCA.License.Number'),multiple="all")
+#NY <- c('ny', 'NY', 'New York')
+#License_merged_Ny <- filter(License_merged, `State` %in% NY)
 
-unique(License_merged_Ny$State) #check
+#unique(License_merged_Ny$State) #check
 
 #clean data
-License_merged_Ny$`Start.Date` <- mdy(License_merged_Ny$Start.Date)
-License_merged_Ny$`End.Date` <- mdy(License_merged_Ny$`End.Date`)
-month <- month(License_merged_Ny$Start.Date)
-year <- year(License_merged_Ny$`Start.Date`)
-License_merged_Ny <- mutate(License_merged_Ny, Start.Month= paste(year,month,sep='-'))
-License_merged_Ny <- mutate(License_merged_Ny, Start.Year= year)
-License_merged_Ny$End.year <- year(License_merged_Ny$End.Date)
-License_merged_Ny <- mutate(License_merged_Ny, Processing.time = as.numeric(difftime(License_merged_Ny$`End.Date`,License_merged_Ny$`Start.Date`,units = 'days')))
-License_merged_Ny_sub <- License_merged_Ny[,c('License.Type','License.Category','Start.Date','End.Date','End.year','Start.Month','Start.Year','Processing.time','Longitude','Latitude','Status','Application.or.Renewal', 'Address.Borough')]
-License_merged_Ny_sub$Processing.time <- ifelse(License_merged_Ny_sub$Processing.time<0,NA,License_merged_Ny_sub$Processing.time)
-License_merged_clean <- na.omit(License_merged_Ny_sub)
-License_merged_clean <- filter(License_merged_clean,Start.Year>=2014)
-License_merged_clean$Address.Borough <- toupper(License_merged_clean$Address.Borough)
+#License_merged_Ny$`Start.Date` <- mdy(License_merged_Ny$Start.Date)
+#License_merged_Ny$`End.Date` <- mdy(License_merged_Ny$`End.Date`)
+#month <- month(License_merged_Ny$Start.Date)
+#year <- year(License_merged_Ny$`Start.Date`)
+#License_merged_Ny <- mutate(License_merged_Ny, Start.Month= format_ISO8601(as.Date(Start.Date), precision = "ym"))
+#License_merged_Ny <- mutate(License_merged_Ny, Start.Year= year)
+#License_merged_Ny$End.year <- year(License_merged_Ny$End.Date)
+#License_merged_Ny <- mutate(License_merged_Ny, Processing.time = as.numeric(difftime(License_merged_Ny$`End.Date`,License_merged_Ny$`Start.Date`,units = 'days')))
+#License_merged_Ny_sub <- License_merged_Ny[,c('License.Type','License.Category','Start.Date','End.Date','End.year','Start.Month','Start.Year','Processing.time','Longitude','Latitude','Status','Application.or.Renewal', 'Address.Borough')]
+#License_merged_Ny_sub$Processing.time <- ifelse(License_merged_Ny_sub$Processing.time<0,NA,License_merged_Ny_sub$Processing.time)
+#License_merged_clean <- na.omit(License_merged_Ny_sub)
+#License_merged_clean <- filter(License_merged_clean,Start.Year>=2014)
+#License_merged_clean$Address.Borough <- toupper(License_merged_clean$Address.Borough)
 #after omiting NA, there are only License type of business, no more individual
 
 #write out a csv with the above cleaned data
@@ -53,7 +53,7 @@ License_merged_clean$Address.Borough <- toupper(License_merged_clean$Address.Bor
 
 
 #load the cleaned data
-License_merged_clean <- read.csv("../data/License_merged_clean.csv")
+License_merged_clean <- read.csv("../output/License_merged_clean.csv")
 head(License_merged_clean)
 unique(License_merged_clean$License.Type)
 
@@ -82,6 +82,8 @@ License_merged_clean$New.Category <- ifelse(License_merged_clean$License.Categor
 #License_merged_clean$New.Category <- ifelse(License_merged_clean$License.Category %in% Service_1,"Service (Individual)",License_merged_clean$New.Category)
 #License_merged_clean$New.Category <- ifelse(License_merged_clean$License.Category %in% Skilled_Wokers,"Skilled_Wokers",License_merged_clean$New.Category)
 
+head(License_merged_clean)
+unique(License_merged_clean$New.Category)
 
 
 #individual
@@ -104,7 +106,6 @@ ui <- dashboardPage(
 
   dashboardSidebar(
     sidebarMenu(
-      menuItem("Introduction", tabName = "Intro", icon = icon("paperclip")),
       menuItem("Map", tabName = "Map", icon = icon("map")),
       menuItem("Service (Business)", tabName = "Service-Business", icon = icon("dashboard")),
       menuItem("Entertainment", icon = icon("heart"), tabName = "Entertainment"),
@@ -121,28 +122,6 @@ ui <- dashboardPage(
     theme = shinythemes::shinytheme('cerulean'),
     
     tabItems(
-      #--------------------
-      tabItem(
-        tabName = "Intro",
-        tags$img(
-          src = "https://smallbiztrends.com/ezoimgfmt/media.smallbiztrends.com/2019/07/Organizing-File-Cabinet-850x476.jpg?ezimgfmt=ng%3Awebp%2Fngcb12%2Frs%3Adevice%2Frscb12-1",
-          width = "100%",
-          style = "opacity: 0.80"
-        ),
-        fluidRow(
-          absolutePanel(
-            style = "background-color: white",
-            top = "35%",
-            left = "30%",
-            right = "25%",
-            height = 170,
-            tags$p(
-              style = "padding: 5%; background-color: white; font-family: alegreya; font-size: 120%",
-              "This R Shiny application visualizes the number of sent applications and how successful they were over time since 2014, separated by borough. To see how different sectors were affected, businesses are separated into 4 categories: Services and Business, Entertainment, Retail, and Transportation. This app highlights the specific socioeconomic impacts COVID-19 had from the perspective of business owners and its patrons. All data is drawn from NYC Open Data."
-            )
-          )
-        )
-      ),
       #---------------------- Map Tab -----------------------------------
       tabItem(
         tabName = "Map",
@@ -151,7 +130,7 @@ ui <- dashboardPage(
           box(
             width=12,
             title = "Map",
-            selectInput("Map_district","Map District:", choices = c('Bronx','Brooklyn','Queens','Manhattan','State Island'))
+            selectInput("Map_district","Map District:", choices = c('Bronx','Brooklyn','Queens','Manhattan','Staten Island'))
           ),
           box(
             width=6,
@@ -174,12 +153,12 @@ ui <- dashboardPage(
                 box(
                   width=3,
                   title = "Select type of business",
-                  selectInput("business_type_service","Business Type:", choices = Service)
+                  selectInput("business_type_service","Business Type:", choices = c("ALL",Service))
                 ),
                 box(
                   width=3,
                   title = "Select type of application",
-                  selectInput("application_type_service","Application Type:", choices = c("Application","Renewal"))
+                  selectInput("application_type_service","New vs Renewal:", choices = c("Application","Renewal"))
                 ),
                 box(
                   width=3,
@@ -223,12 +202,12 @@ ui <- dashboardPage(
                 box(
                   width=3,
                   title = "Select type of business",
-                  selectInput("business_type_entertain","Business Type:", choices = Entertainment)
+                  selectInput("business_type_entertain","Business Type:", choices = c("ALL",Entertainment))
                 ),
                 box(
                   width=3,
                   title = "Select type of application",
-                  selectInput("application_type_entertain","Application Type:", choices = c("Application","Renewal"))
+                  selectInput("application_type_entertain","New vs Renewal:", choices = c("Application","Renewal"))
                 ),
                 box(
                   width=3,
@@ -270,12 +249,12 @@ ui <- dashboardPage(
               box(
                 width=3,
                 title = "Select type of business",
-                selectInput("business_type_retail","Business Type:", choices = Retail)
+                selectInput("business_type_retail","Business Type:", choices = c("ALL",Retail))
               ),
               box(
                 width=3,
                 title = "Select type of application",
-                selectInput("application_type_retail","Application Type:", choices = c("Application","Renewal"))
+                selectInput("application_type_retail","New vs Renewal:", choices = c("Application","Renewal"))
               ),
               box(
                 width=3,
@@ -317,12 +296,12 @@ ui <- dashboardPage(
               box(
                 width=3,
                 title = "Select type of business",
-                selectInput("business_type_trans","Business Type:", choices = Trans)
+                selectInput("business_type_trans","Business Type:", choices = c("ALL",Trans))
               ),
               box(
                 width=3,
                 title = "Select type of application",
-                selectInput("application_type_trans","Application Type:", choices = c("Application","Renewal"))
+                selectInput("application_type_trans","New vs Renewal:", choices = c("Application","Renewal"))
               ),
               box(
                 width=3,
@@ -370,11 +349,15 @@ ui <- dashboardPage(
         href = "https://data.cityofnewyork.us/Business/Legally-Operating-Businesses/w7w3-xahh",
         "data.cityofnewyork.us/Business/Legally-Operating-Businesses", 
       ),br(),
+      tags$a(
+        href = "https://data.cityofnewyork.us/Health/COVID-19-Daily-Counts-of-Cases-Hospitalizations-an/rc75-m7u3",
+        "data.cityofnewyork.us/Health/COVID-19-Daily-Counts-of-Cases-Hospitalizations-an", 
+      ),br(),
       tags$h2(
         "Contacts:"
       ),
       tags$p(
-        "If have any questions, please contact :"
+        "If you have any questions, please contact :"
       ),
       tags$p(
         "1. Arceneaux Luke (lpa2114@columbia.edu)"
@@ -400,6 +383,33 @@ ui <- dashboardPage(
       tags$a(
         href = "https://github.com/TZstatsADS/ads-spring2023-project2-group5",
         "github.com/TZstatsADS/ads-spring2023-project2-group5"
+      ),
+      tags$h2(
+        "FIPS code for boroughs"
+      ),
+      tags$a(
+        href = "https://transition.fcc.gov/oet/info/maps/census/fips/fips.txt",
+        "transition.fcc.gov/oet/info/maps/census/fips/fips.txt"
+      ),
+      tags$h2(
+        "Shiny tutorial"
+      ),
+      tags$a(
+        href = "http://tzstatsads.github.io/tutorials/wk3_Tutorial2.html",
+        "tzstatsads.github.io/tutorials/wk3_Tutorial2.html"
+      ),
+      tags$h2(
+        "ChoroplethrZip documentation"
+      ),
+      tags$a(
+        href = "https://www.rdocumentation.org/packages/choroplethrZip/versions/1.5.0/topics/zip_choropleth",
+        "rdocumentation.org/packages/choroplethrZip/versions/1.5.0/topics/zip_choropleth"
+      ),
+      tags$h2(
+        "Libraries used"
+      ),
+      tags$a(
+        "leaflet,ggplot2,reshape2,dtplyr,dplyr,DT,lubridate,devtools,shiny,choroplethrZip,caret,tmap,tmaptools,shinydashboard"
       )
 #      fluidRow(
 #        box(
@@ -427,33 +437,40 @@ server <- function(input, output) {
   #==============================Map plot ==================================
   output$Map_1 <- renderImage({
     #'D:/source/Stats 5243/',
-    list(src = paste('../doc/figs/',input$Map_district,'_Before.png',sep=""),width='100%')
+    list(src = paste('../output/map/',input$Map_district,'_Before.png',sep=""),width='100%')
     
   },deleteFile=FALSE)
   
   output$Map_2 <- renderImage({
     #'D:/source/Stats 5243/',
-    list(src = paste('../doc/figs/',input$Map_district,'_After.png',sep=""),width='100%')
+    list(src = paste('../output/map/',input$Map_district,'_After.png',sep=""),width='100%')
     
   },deleteFile=FALSE)
   
   #============================= Functions for plot ==========================
+  
+  level <- seq(ymd("2014/01/01"),ymd("2023/02/01"),"months")
+  levels <- paste(year(level),month(level),sep="-")
+  
   plot_byDate <- function(business_type,application_type,borough,dateRange){
+    
     License_merged_clean %>% 
-      filter(License.Category == business_type) %>% #business category
+      filter(License.Category %in% business_type) %>% #business category
       filter(Application.or.Renewal == application_type) %>%  #"Application" or "Renewal"
       filter(Address.Borough == borough) %>% #borough
       filter(Start.Date>=dateRange[1] & Start.Date<=dateRange[2]) %>% #date range
       group_by(Start.Date) %>% 
       summarise(count=n()) %>% 
-      ggplot(aes(x=Start.Date,y=count))+geom_col()+
+      ggplot(aes(x=Start.Date,y=count),levels=levels)+geom_col()+
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
       ggtitle("Plot by Date")
+    
   }
   
   plot_byMonth <- function(business_type,application_type,borough,dateRange){
+    
     License_merged_clean %>% 
-      filter(License.Category == business_type) %>% #business category
+      filter(License.Category %in% business_type) %>% #business category
       filter(Application.or.Renewal == application_type) %>%  #"Application" or "Renewal"
       filter(Address.Borough == borough) %>% #borough
       filter(Start.Date>=dateRange[1] & Start.Date<=dateRange[2]) %>% #date range
@@ -462,11 +479,13 @@ server <- function(input, output) {
       ggplot(aes(x=Start.Month,y=count))+geom_col()+
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
       ggtitle("Plot by Month")
+    
   }
   
   plot_ProcessTime <- function(business_type,application_type,borough,dateRange){
+    
     License_merged_clean %>% 
-      filter(License.Category == business_type) %>% #business category
+      filter(License.Category %in% business_type) %>% #business category
       filter(Application.or.Renewal == application_type) %>%  #"Application" or "Renewal"
       filter(Address.Borough == borough) %>% #borough
       filter(Start.Date>=dateRange[1] & Start.Date<=dateRange[2]) %>% #date range
@@ -474,12 +493,14 @@ server <- function(input, output) {
       ggplot(aes(x=Start.Month,y=Processing.time))+geom_point()+
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
       ggtitle("Processing time")
+    
   }
   
   plot_status <- function(business_type,application_type,borough,dateRange){
+    
     table_plot <- License_merged_clean %>% 
       filter(Status != "Withdrawn") %>% #Withdrawn has very few cases, so drop withdrawn
-      filter(License.Category == business_type) %>% #business category
+      filter(License.Category %in% business_type) %>% #business category
       filter(Application.or.Renewal == application_type) %>%  #"Application" or "Renewal"
       filter(Address.Borough == borough) %>% #borough
       filter(Start.Date>=dateRange[1] & Start.Date<=dateRange[2]) %>% #date range
@@ -487,73 +508,168 @@ server <- function(input, output) {
       summarise(count = n()) %>% 
       mutate(prop = count/sum(count))
     
-      return(ggplot(table_plot,aes(End.year,prop,colour=Status,group = 1))+
-              geom_line()+geom_point()+
-              facet_wrap(~Status,scales = "free_y")+
-              ggtitle("Status proportion")
-        )
+    return(ggplot(table_plot,aes(End.year,prop,fill=Status))+
+             geom_col()+
+             facet_wrap(~Status,scales = "free_y")+
+             ggtitle("Status proportion"))
+           
+    
   }
+  
   
   
   #============================== Service plot ==================================
   output$service_plot1 <- renderPlot({
-    plot_byDate(input$business_type_service,input$application_type_service, input$borough_service,input$dateRange_service)
+    if(input$business_type_service == "ALL"){
+      plot_byDate(Service,input$application_type_service, input$borough_service,input$dateRange_service)
+    }
+    else{
+      plot_byDate(input$business_type_service,input$application_type_service, input$borough_service,input$dateRange_service)
+    }
+    
   })
   output$service_plot2 <- renderPlot({
-    plot_byMonth(input$business_type_service,input$application_type_service, input$borough_service,input$dateRange_service)
+    if(input$business_type_service == "ALL"){
+      plot_byMonth(Service,input$application_type_service, input$borough_service,input$dateRange_service)
+    }
+    else{
+      plot_byMonth(input$business_type_service,input$application_type_service, input$borough_service,input$dateRange_service)
+
+    }
   })
   output$service_plot3 <- renderPlot({
-    plot_ProcessTime(input$business_type_service,input$application_type_service, input$borough_service,input$dateRange_service)
+    if(input$business_type_service == "ALL"){
+      plot_ProcessTime(Service,input$application_type_service, input$borough_service,input$dateRange_service)
+    }
+    else{
+      plot_ProcessTime(input$business_type_service,input$application_type_service, input$borough_service,input$dateRange_service)
+    }
   })
   output$service_plot4 <- renderPlot({
-    plot_status(input$business_type_service,input$application_type_service, input$borough_service,input$dateRange_service)
+    if(input$business_type_service == "ALL"){
+      plot_status(Service,input$application_type_service, input$borough_service,input$dateRange_service)
+      
+    }
+    else{
+      plot_status(input$business_type_service,input$application_type_service, input$borough_service,input$dateRange_service)
+      
+    }
   })
   
   #============================== Entertainment plot ==================================
   output$entertainment_plot1 <- renderPlot({
-    plot_byDate(input$business_type_entertain,input$application_type_entertain,
-                input$borough_entertain,input$dateRange_entertain)
+    if(input$business_type_entertain=="ALL"){
+      plot_byDate(Entertainment,input$application_type_entertain,
+                  input$borough_entertain,input$dateRange_entertain)
+    }
+    else{
+      plot_byDate(input$business_type_entertain,input$application_type_entertain,
+                  input$borough_entertain,input$dateRange_entertain)
+    }
+   
   })
   output$entertainment_plot2 <- renderPlot({
-    plot_byMonth(input$business_type_entertain,input$application_type_entertain,
-                input$borough_entertain,input$dateRange_entertain)
+    if(input$business_type_entertain=="ALL"){
+      plot_byMonth(Entertainment,input$application_type_entertain,
+                   input$borough_entertain,input$dateRange_entertain)
+    }
+    else{
+      plot_byMonth(input$business_type_entertain,input$application_type_entertain,
+                   input$borough_entertain,input$dateRange_entertain)
+    }
   })
   output$entertainment_plot3 <- renderPlot({
-    plot_ProcessTime(input$business_type_entertain,input$application_type_entertain,
-                     input$borough_entertain,input$dateRange_entertain)
+    if(input$business_type_entertain=="ALL"){
+      plot_ProcessTime(Entertainment,input$application_type_entertain,
+                       input$borough_entertain,input$dateRange_entertain)
+    }
+    else{
+      plot_ProcessTime(input$business_type_entertain,input$application_type_entertain,
+                       input$borough_entertain,input$dateRange_entertain)
+    }
+    
   })
   output$entertainment_plot4 <- renderPlot({
-    plot_status(input$business_type_entertain,input$application_type_entertain,
-                     input$borough_entertain,input$dateRange_entertain)
+    if(input$business_type_entertain=="ALL"){
+      plot_status(Entertainment,input$application_type_entertain,
+                  input$borough_entertain,input$dateRange_entertain)
+    }
+    else{
+      plot_status(input$business_type_entertain,input$application_type_entertain,
+                  input$borough_entertain,input$dateRange_entertain)
+    }
+    
   })
   
   #============================== Retail plot ==================================
   output$retail_plot1 <- renderPlot({
-    plot_byDate(input$business_type_retail,input$application_type_retail, input$borough_retail,input$dateRange_retail)
+    if(input$business_type_retail == "ALL"){
+      plot_byDate(Retail,input$application_type_retail, input$borough_retail,input$dateRange_retail)
+    }
+    else{
+      plot_byDate(input$business_type_retail,input$application_type_retail, input$borough_retail,input$dateRange_retail)
+    }
   })
   output$retail_plot2 <- renderPlot({
-    plot_byMonth(input$business_type_retail,input$application_type_retail, input$borough_retail,input$dateRange_retail)
+    if(input$business_type_retail == "ALL"){
+      plot_byMonth(Retail,input$application_type_retail, input$borough_retail,input$dateRange_retail)
+    }
+    else{
+      plot_byMonth(input$business_type_retail,input$application_type_retail, input$borough_retail,input$dateRange_retail)
+    }
   })
   output$retail_plot3 <- renderPlot({
-    plot_ProcessTime(input$business_type_retail,input$application_type_retail, input$borough_retail,input$dateRange_retail)
+    if(input$business_type_retail == "ALL"){
+      plot_ProcessTime(Retail,input$application_type_retail, input$borough_retail,input$dateRange_retail)
+    }
+    else{
+      plot_ProcessTime(input$business_type_retail,input$application_type_retail, input$borough_retail,input$dateRange_retail)
+    }
   })
   output$retail_plot4 <- renderPlot({
-    plot_status(input$business_type_retail,input$application_type_retail, input$borough_retail,input$dateRange_retail)
+    if(input$business_type_retail == "ALL"){
+      plot_status(Retail,input$application_type_retail, input$borough_retail,input$dateRange_retail)
+    }
+    else{
+      plot_status(input$business_type_retail,input$application_type_retail, input$borough_retail,input$dateRange_retail)
+    }
   })
   
   #============================== Transportation plot ==================================
   output$trans_plot1 <- renderPlot({
-    plot_byDate(input$business_type_trans,input$application_type_trans, input$borough_trans,input$dateRange_trans)
+    if(input$business_type_trans == "ALL"){
+      plot_byDate(Trans,input$application_type_trans, input$borough_trans,input$dateRange_trans)
+    }
+    else{
+      plot_byDate(input$business_type_trans,input$application_type_trans, input$borough_trans,input$dateRange_trans)
+    }
   })
   
   output$trans_plot2 <- renderPlot({
-    plot_byMonth(input$business_type_trans,input$application_type_trans, input$borough_trans,input$dateRange_trans)
+    if(input$business_type_trans == "ALL"){
+      plot_byMonth(Trans,input$application_type_trans, input$borough_trans,input$dateRange_trans)
+    }
+    else{
+      plot_byMonth(input$business_type_trans,input$application_type_trans, input$borough_trans,input$dateRange_trans)
+    }
   })
   output$trans_plot3 <- renderPlot({
-    plot_ProcessTime(input$business_type_trans,input$application_type_trans, input$borough_trans,input$dateRange_trans)
+    if(input$business_type_trans == "ALL"){
+      plot_ProcessTime(Trans,input$application_type_trans, input$borough_trans,input$dateRange_trans)
+    }
+    else{
+      plot_ProcessTime(input$business_type_trans,input$application_type_trans, input$borough_trans,input$dateRange_trans)
+      
+    }
   })
   output$trans_plot4 <- renderPlot({
-    plot_status(input$business_type_trans,input$application_type_trans, input$borough_trans,input$dateRange_trans)
+    if(input$business_type_trans == "ALL"){
+      plot_status(Trans,input$application_type_trans, input$borough_trans,input$dateRange_trans)
+    }
+    else{
+      plot_status(input$business_type_trans,input$application_type_trans, input$borough_trans,input$dateRange_trans)
+      
+    }
   })
   
   #=============================== Appendix Text ==========================

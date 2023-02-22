@@ -18,11 +18,11 @@ The **learning goals** for this project is:
 
 *The above general statement about project 2 can be removed once you are finished with your project. It is optional.
 
-## Project Title Lorem ipsum dolor sit amet
+## Project Title: NYC Business Permit Applications and COVID-19
 Term: Spring 2023
 
-+ Team #
-+ **Projec title**: + Team members
++ Team # 5
++ **Team members**:
 	+ Luke Arceneaux
 	+ Hongju Ooyang
 	+ Ranran Tao
@@ -30,7 +30,7 @@ Term: Spring 2023
 	+ Fei Xue
 	+ Haoyu Zhang
 
-+ **Project summary**: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
++ **Project summary**: This R Shiny application visualizes the number of sent applications and how successful they were over time since 2014, separated by borough. To see how different sectors were affected, businesses are separated into 4 categories: Services and Business, Entertainment, Retail, and Transportation. This app highlights the specific socioeconomic impacts COVID-19 had from the perspective of business owners and its patrons. All data is drawn from NYC Open Data.
 
 + **Contribution statement**: ([default](doc/a_note_on_contributions.md)) All team members contributed equally in all stages of this project. All team members approve our work presented in this GitHub repository including this contributions statement. 
 

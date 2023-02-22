@@ -354,6 +354,10 @@ ui <- dashboardPage(
         href = "https://data.cityofnewyork.us/Health/COVID-19-Daily-Counts-of-Cases-Hospitalizations-an/rc75-m7u3",
         "data.cityofnewyork.us/Health/COVID-19-Daily-Counts-of-Cases-Hospitalizations-an", 
       ),br(),
+      tags$a(
+        href = "https://data.cityofnewyork.us/Business/Zip-Code-Boundaries/i8iw-xf4u/data",
+        "data.cityofnewyork.us/Business/Zip-Code-Boundaries", 
+      ),br(),
       tags$h2(
         "Contacts:"
       ),
@@ -400,17 +404,10 @@ ui <- dashboardPage(
         "tzstatsads.github.io/tutorials/wk3_Tutorial2.html"
       ),
       tags$h2(
-        "ChoroplethrZip documentation"
-      ),
-      tags$a(
-        href = "https://www.rdocumentation.org/packages/choroplethrZip/versions/1.5.0/topics/zip_choropleth",
-        "rdocumentation.org/packages/choroplethrZip/versions/1.5.0/topics/zip_choropleth"
-      ),
-      tags$h2(
         "Libraries used"
       ),
       tags$a(
-        "leaflet,ggplot2,reshape2,dtplyr,dplyr,DT,lubridate,devtools,shiny,choroplethrZip,caret,tmap,tmaptools,shinydashboard"
+        "leaflet,ggplot2,reshape2,dtplyr,dplyr,DT,lubridate,devtools,shiny,shinydashboard"
       )
 #      fluidRow(
 #        box(

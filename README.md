@@ -24,7 +24,7 @@ Term: Spring 2023
 
 + **Contribution statement**: ([default](doc/a_note_on_contributions.md)) 
 
-All six of us contributed equally in the project. After determining the datasets, we all explored the datasets and solidified the design of the project together. From here, Mingze Xu, Hong Ouyang, and Haoyu Zhang focused on the datasets and EDA, while Luke Arceneaux, Fei Xue, and Ranran Tao assembled the skeleton structure of the Shiny APP. Afterwards, everyone worked on editing different aspects of the application to completion. 
+All six of us contributed equally in the project. After determining the datasets, we all explored the datasets and solidified the design of the project together. From here, Mingze Xu, Hong Ouyang, and Haoyu Zhang focused on the datasets and EDA, while Luke Arceneaux, Fei Xue, and Ranran Tao assembled the skeleton structure of the Shiny app. Afterwards, everyone worked on editing different aspects of the application to completion. 
 
 Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
 

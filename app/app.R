@@ -14,8 +14,8 @@ library(shinythemes)
 #==================== Data Merging and Subseting ========================
 
 #load the original data sets
-#License_Applications <- read.csv("License_Applications.csv")
-#Legally_Operating_Businesses <- read.csv("Legally_Operating_Businesses.csv")
+License_Applications <- read.csv("../data/License_Applications.csv")
+Legally_Operating_Businesses <- read.csv("../data/Legally_Operating_Businesses.csv")
 
 #get the latest data
 #License_Applications <- read.csv("https://data.cityofnewyork.us/api/views/ptev-4hud/rows.csv?accessType=DOWNLOAD")
@@ -24,28 +24,28 @@ library(shinythemes)
 #colnames(Legally_Operating_Businesses)
 
 #merge two datasets and subset useful rows&columns
-#Legal <- Legally_Operating_Businesses[,c('DCA.License.Number','Address.Borough')]
+Legal <- Legally_Operating_Businesses[,c('DCA.License.Number','Address.Borough')]
 
-#License_merged <- left_join(License_Applications, Legal,by=c('License.Number' = 'DCA.License.Number'),multiple="all")
-#NY <- c('ny', 'NY', 'New York')
-#License_merged_Ny <- filter(License_merged, `State` %in% NY)
+License_merged <- left_join(License_Applications, Legal,by=c('License.Number' = 'DCA.License.Number'),multiple="all")
+NY <- c('ny', 'NY', 'New York')
+License_merged_Ny <- filter(License_merged, `State` %in% NY)
 
-#unique(License_merged_Ny$State) #check
+unique(License_merged_Ny$State) #check
 
 #clean data
-#License_merged_Ny$`Start.Date` <- mdy(License_merged_Ny$Start.Date)
-#License_merged_Ny$`End.Date` <- mdy(License_merged_Ny$`End.Date`)
-#month <- month(License_merged_Ny$Start.Date)
-#year <- year(License_merged_Ny$`Start.Date`)
-#License_merged_Ny <- mutate(License_merged_Ny, Start.Month= format_ISO8601(as.Date(Start.Date), precision = "ym"))
-#License_merged_Ny <- mutate(License_merged_Ny, Start.Year= year)
-#License_merged_Ny$End.year <- year(License_merged_Ny$End.Date)
-#License_merged_Ny <- mutate(License_merged_Ny, Processing.time = as.numeric(difftime(License_merged_Ny$`End.Date`,License_merged_Ny$`Start.Date`,units = 'days')))
-#License_merged_Ny_sub <- License_merged_Ny[,c('License.Type','License.Category','Start.Date','End.Date','End.year','Start.Month','Start.Year','Processing.time','Longitude','Latitude','Status','Application.or.Renewal', 'Address.Borough')]
-#License_merged_Ny_sub$Processing.time <- ifelse(License_merged_Ny_sub$Processing.time<0,NA,License_merged_Ny_sub$Processing.time)
-#License_merged_clean <- na.omit(License_merged_Ny_sub)
-#License_merged_clean <- filter(License_merged_clean,Start.Year>=2014)
-#License_merged_clean$Address.Borough <- toupper(License_merged_clean$Address.Borough)
+License_merged_Ny$`Start.Date` <- mdy(License_merged_Ny$Start.Date)
+License_merged_Ny$`End.Date` <- mdy(License_merged_Ny$`End.Date`)
+month <- month(License_merged_Ny$Start.Date)
+year <- year(License_merged_Ny$`Start.Date`)
+License_merged_Ny <- mutate(License_merged_Ny, Start.Month= format_ISO8601(as.Date(Start.Date), precision = "ym"))
+License_merged_Ny <- mutate(License_merged_Ny, Start.Year= year)
+License_merged_Ny$End.year <- year(License_merged_Ny$End.Date)
+License_merged_Ny <- mutate(License_merged_Ny, Processing.time = as.numeric(difftime(License_merged_Ny$`End.Date`,License_merged_Ny$`Start.Date`,units = 'days')))
+License_merged_Ny_sub <- License_merged_Ny[,c('License.Type','License.Category','Start.Date','End.Date','End.year','Start.Month','Start.Year','Processing.time','Longitude','Latitude','Status','Application.or.Renewal', 'Address.Borough')]
+License_merged_Ny_sub$Processing.time <- ifelse(License_merged_Ny_sub$Processing.time<0,NA,License_merged_Ny_sub$Processing.time)
+License_merged_clean <- na.omit(License_merged_Ny_sub)
+License_merged_clean <- filter(License_merged_clean,Start.Year>=2014)
+License_merged_clean$Address.Borough <- toupper(License_merged_clean$Address.Borough)
 #after omiting NA, there are only License type of business, no more individual
 
 #write out a csv with the above cleaned data
@@ -53,7 +53,7 @@ library(shinythemes)
 
 
 #load the cleaned data
-License_merged_clean <- read.csv("../output/License_merged_clean.csv")
+#License_merged_clean <- read.csv("../output/License_merged_clean.csv")
 head(License_merged_clean)
 unique(License_merged_clean$License.Type)
 
@@ -125,7 +125,8 @@ ui <- dashboardPage(
       #---------------------- Map Tab -----------------------------------
       tabItem(
         tabName = "Map",
-        h2("Map tab content"),
+        h2("No. of Applications Submitted: 
+              804 days before COVID vs 804 days after COVID "),
         fluidRow(
           box(
             width=12,
@@ -463,7 +464,8 @@ server <- function(input, output) {
       summarise(count=n()) %>% 
       ggplot(aes(x=Start.Date,y=count),levels=levels)+geom_col()+
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
-      ggtitle("Plot by Date")
+      xlab("Application Submission Date")+ylab("Number of Applications")+
+      ggtitle("Number of Applications vs Application Submission Date")
     
   }
   
@@ -478,7 +480,8 @@ server <- function(input, output) {
       summarise(count=n()) %>% 
       ggplot(aes(x=Start.Month,y=count))+geom_col()+
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
-      ggtitle("Plot by Month")
+      xlab("Application Submission Month")+ylab("Number of Applications")+
+      ggtitle("Number of Applications vs Application Submission Month")
     
   }
   
@@ -492,7 +495,8 @@ server <- function(input, output) {
       group_by(Start.Month,Processing.time) %>% 
       ggplot(aes(x=Start.Month,y=Processing.time))+geom_point()+
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
-      ggtitle("Processing time")
+      xlab("Application Submission Month")+ylab("Processing Time of Applications")+
+      ggtitle("Processing Time of Applications vs Application Submission Month")
     
   }
   
@@ -511,7 +515,8 @@ server <- function(input, output) {
     return(ggplot(table_plot,aes(End.year,prop,fill=Status))+
              geom_col()+
              facet_wrap(~Status,scales = "free_y")+
-             ggtitle("Status proportion"))
+             xlab("Year")+ylab("Application Status Proportion")+
+             ggtitle("Application Status Proportion vs Year"))
            
     
   }

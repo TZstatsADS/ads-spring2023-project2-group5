@@ -465,7 +465,7 @@ server <- function(input, output) {
       ggplot(aes(x=Start.Date,y=count),levels=levels)+geom_col()+
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
       xlab("Application Submission Date")+ylab("Number of Applications")+
-      ggtitle("Number of Applications vs Application Submission Date")
+      ggtitle("Number of Applications vs Submission Date")
     
   }
   
@@ -481,7 +481,7 @@ server <- function(input, output) {
       ggplot(aes(x=Start.Month,y=count))+geom_col()+
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
       xlab("Application Submission Month")+ylab("Number of Applications")+
-      ggtitle("Number of Applications vs Application Submission Month")
+      ggtitle("Number of Applications vs Submission Month")
     
   }
   
@@ -496,7 +496,7 @@ server <- function(input, output) {
       ggplot(aes(x=Start.Month,y=Processing.time))+geom_point()+
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
       xlab("Application Submission Month")+ylab("Processing Time of Applications")+
-      ggtitle("Processing Time of Applications vs Application Submission Month")
+      ggtitle("Processing Time of Applications vs Submission Month")
     
   }
   

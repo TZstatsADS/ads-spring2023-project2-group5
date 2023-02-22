@@ -23,6 +23,7 @@ Term: Spring 2023
 **[Here](https://zhanghaoyu0.shinyapps.io/Stats5243/)** is our app.
 
 + **Contribution statement**: ([default](doc/a_note_on_contributions.md)) 
+
 In this project, we mainly focused on explored the the relationship between the COVID-19 and the Business Applications. All six of us contributed equally in the project. We started a Google Colab and work on the code together.
 
 At the beginning, we all find datasets on our own, and we scheduled zoom meetings to determine which to be used. After determining the datasets, we all work on exploring the dataset and see if there is anything related, and we met on Zoom again to determine the topic of this project. At the meantime, we always communicated findings of the datasets on WhatsApp.

@@ -12,7 +12,7 @@ Term: Spring 2023
 + Team # 5
 + **Team members**:
 	+ Luke Arceneaux
-	+ Hongju Ooyang
+	+ Hongju Ouyang
 	+ Ranran Tao
 	+ Mingze Xu
 	+ Fei Xue
